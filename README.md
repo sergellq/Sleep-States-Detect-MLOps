@@ -1,2 +1,6 @@
 # Sleep-States-Detect-MLOps
-Child Mind Institute - Detect Sleep States from kaggle as a project for the MLOps course 
+
+Child Mind Institute - Detect Sleep States from kaggle as a project for the
+MLOps course
+
+Когда-то здесб что-то будет...

@@ -1,3 +1,16 @@
+/data
+.json
+.csv
+.h5
+.pth
+.cbm
+.xyz
+.etc
+test.ipynb
+checkpoints/
+lightning_logs/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
