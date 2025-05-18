@@ -1,47 +1,69 @@
 import gc
-import pickle
 
+import hydra
 import numpy as np
 import pandas as pd
 import polars as pl
+from omegaconf import DictConfig
 from tqdm.auto import tqdm
 
-from sleep_states_detect.data_manage.load_data import load_data
+from sleep_states_detect.data_manage.download_data import download_data
+from sleep_states_detect.data_manage.download_kaggle_data import download_kaggle_data
 from sleep_states_detect.utils.utils import check_files_exist
 
 
-def prepare_data(link: str = None, force: bool = False):
+@hydra.main(config_path="../../configs", config_name="config", version_base=None)
+def data_preprocessing(cfg: DictConfig):
     """Обработка начального датасета и сохранение в удобном виде
 
     Args:
         link: ссылка на загрузку подготовленных данных (или None, если надо готовить)
         force: проверять ли на существование финальных файлов
 
-    TODO: ест много оперативки, почему-то игнорит swap из-за чего крашится
+    TODO: ест много оперативки (~20 gb), почему-то игнорит swap из-за чего крашится
+          (лотерея 50/50)
     """
 
-    if not force and check_files_exist(
-        "data/",
-        [
-            "X.npy",
-            "Y.csv",
-            "dict_valid_ratio.pkl",
-        ],
-    ):
-        print("данные существуют")
-        return
-
-    if link is not None:
-        # загружаем готовые данные
-        load_data(link=link, force=True)
-        return
+    if not cfg["data_preprocessing"]["force_load"]:
+        if check_files_exist(
+            cfg["file_names"]["data_folder"],
+            [
+                cfg["file_names"]["postprocessed_target"],
+                cfg["file_names"]["target_data"],
+                cfg["file_names"]["mask_data"],
+                cfg["file_names"]["base_data"],
+                cfg["file_names"]["train_data"],
+            ],
+        ):
+            print("preprocessed data is already exists")
+            return
+        else:
+            if cfg["data_preprocessing"]["link"] is not None:
+                # download prepared data
+                download_data(
+                    link=cfg["data_preprocessing"]["link"],
+                    data_dir=cfg["file_names"]["data_folder"],
+                )
+                return
 
     gc.collect()
 
-    INPUT_DIR = "data/"
+    if not check_files_exist(
+        cfg["file_names"]["data_folder"],
+        [
+            cfg["file_names"]["kaggle_train_series"],
+            cfg["file_names"]["kaggle_train_events"],
+        ],
+    ):
+        download_kaggle_data(cfg)
 
-    df_series = pl.read_parquet(INPUT_DIR + "train_series.parquet")
-    df_events = pl.read_csv(INPUT_DIR + "train_events.csv")
+    df_series = pl.read_parquet(
+        cfg["file_names"]["data_folder"] + cfg["file_names"]["kaggle_train_series"],
+        low_memory=True,
+    )
+    df_events = pl.read_csv(
+        cfg["file_names"]["data_folder"] + cfg["file_names"]["kaggle_train_events"]
+    )
     df_events = df_events.with_columns(
         pl.col("event").replace({"wakeup": 1.0, "onset": -1.0}).cast(pl.Float32)
     )
@@ -131,7 +153,29 @@ def prepare_data(link: str = None, force: bool = False):
 
     df_1min = pd.concat(list_df_1min)
 
-    df_1min.to_csv(INPUT_DIR + "Y.csv")
-    np.save(INPUT_DIR + "X.npy", X)
-    with open("dict_valid_ratio.pkl", "wb") as f:
-        pickle.dump(dict_valid_ratio, f)
+    # df_events
+    df_events = pd.read_csv(
+        cfg["file_names"]["data_folder"] + cfg["file_names"]["kaggle_train_events"]
+    ).dropna()
+    df_events["timestamp"] = pd.to_datetime(
+        df_events["timestamp"], utc=True
+    ).dt.tz_localize(None)
+    df_events["time"] = df_events["timestamp"].dt.time.astype(str)
+    df_events["minute_mod15"] = df_events["timestamp"].dt.minute % 15
+
+    # Создание матриц y и mask
+    df_y = df_1min.pivot(
+        index=["series_id", "date"], columns="time", values="target"
+    ).fillna(0)
+    df_mask = df_1min.pivot(
+        index=["series_id", "date"], columns="time", values="valid_flag"
+    ).fillna(0)
+
+    df_events.to_csv(
+        cfg["file_names"]["data_folder"] + cfg["file_names"]["postprocessed_target"]
+    )
+    df_y.to_csv(cfg["file_names"]["data_folder"] + cfg["file_names"]["target_data"])
+    df_mask.to_csv(cfg["file_names"]["data_folder"] + cfg["file_names"]["mask_data"])
+    df_1min.to_csv(cfg["file_names"]["data_folder"] + cfg["file_names"]["base_data"])
+
+    np.save(cfg["file_names"]["data_folder"] + cfg["file_names"]["train_data"], X)

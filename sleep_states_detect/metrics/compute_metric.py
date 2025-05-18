@@ -35,7 +35,7 @@ def score(
     use_scoring_intervals: bool = False,
     verbose: bool = False,
 ) -> Tuple[float, pd.DataFrame, pd.DataFrame]:
-    if tolerances in None:
+    if tolerances is None:
         tolerances = {
             "onset": [12, 36, 60, 90, 120, 150, 180, 240, 300, 360],
             "wakeup": [12, 36, 60, 90, 120, 150, 180, 240, 300, 360],
@@ -289,9 +289,9 @@ def event_detection_ap(
     detections_matched = pd.concat(detections_matched)
 
     # Compute AP per event x tolerance group
-    # event_classes = ground_truths[event_column_name].unique()
+    event_classes = ground_truths[event_column_name].unique()  # noqa: F841
     ap_table = (
-        detections_matched.query("event in @event_classes")
+        detections_matched.query("event in @event_classes")  # тут используется вроде бы
         .groupby([event_column_name, "tolerance"])
         .apply(
             lambda group: average_precision_score(

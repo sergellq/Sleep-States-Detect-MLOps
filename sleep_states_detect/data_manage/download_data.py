@@ -5,31 +5,21 @@ from pathlib import Path
 import requests
 from tqdm.auto import tqdm
 
-from sleep_states_detect.utils.utils import check_files_exist
 
-
-def load_data(link: str, force: bool = False):
+def download_data(link: str, data_dir: str | Path):
     """
     link: ссылка на датасет
     force: проверять ли наличие файлов перед скачкой
+    data_dir: папка куда качать
 
     качает датасет и сохраняет в папку data/ (если нет хоть одного файла)
 
     по идее надо бы с кагла напрямую качать, но там авторизация...
     """
 
-    data_dir = Path("data")
-    if not force and check_files_exist(
-        data_dir,
-        [
-            "sample_submission.csv",
-            "test_series.parquet",
-            "train_events.csv",
-            "train_series.parquet",
-        ],
-    ):
-        print("данные существуют")
-        return
+    print(link)
+
+    data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Скачивание {link} ...")

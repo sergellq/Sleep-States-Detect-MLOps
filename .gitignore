@@ -6,10 +6,12 @@
 .cbm
 .xyz
 .etc
+*.pkl
 test.ipynb
 checkpoints/
 lightning_logs/
-
+outputs/
+tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
