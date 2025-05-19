@@ -1,6 +1,6 @@
 import gc
 
-import hydra
+# import hydra
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -12,7 +12,7 @@ from sleep_states_detect.data_manage.download_kaggle_data import download_kaggle
 from sleep_states_detect.utils.utils import check_files_exist
 
 
-@hydra.main(config_path="../../configs", config_name="config", version_base=None)
+# @hydra.main(config_path="../../configs", config_name="config", version_base=None)
 def data_preprocessing(cfg: DictConfig):
     """Обработка начального датасета и сохранение в удобном виде
 

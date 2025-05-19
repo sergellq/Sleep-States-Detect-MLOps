@@ -1,4 +1,6 @@
+import hydra
 import torch
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import Trainer
 
 from sleep_states_detect.data_manage.dataset import SleepDataModule
@@ -7,9 +9,12 @@ from sleep_states_detect.models.unet1d_lightning import UNet1dLightning
 from sleep_states_detect.utils.utils import get_latest_checkpoint
 
 
-def infer_main():
+@hydra.main(config_path="../configs", config_name="config", version_base=None)
+def infer_main(cfg: DictConfig):
+    OmegaConf.resolve(cfg)
+
     # Загрузка данных
-    data_module = SleepDataModule()
+    data_module = SleepDataModule(cfg)
     data_module.setup("predict")
 
     # Загрузка модели

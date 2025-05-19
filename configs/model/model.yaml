@@ -1,0 +1,22 @@
+input_channels: 3 # (int): Number of input channels (for multi-channel time series)
+initial_channels: 72 # (int): Number of output channels after initial Conv.
+initial_kernel_size: 15 # (int): Kernel size for the first convolution.
+down_channels: # (list of int): List of channels for downsampling layers.
+  - 72
+  - 72
+  - 72
+down_kernel_size: # (list of int): List of kernel sizes for downsampling.
+  - 12
+  - 15
+  - 15
+down_stride: # (list of int): List of strides for downsampling.
+  - 12
+  - 9
+  - 5
+res_depth: 3 # (int): Number of residual blocks in each downsampling layer.
+res_kernel_size: 15 # (int): Kernel size for residual blocks.
+se_ratio: 4 # (float): Squeeze-and-Excitation ratio.
+out_kernel_size: 21 # (int): Kernel size for the final output layer.
+
+optim_lr: 0.001
+sheduler_T_max: 15

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
 import torch.optim as optim
+from omegaconf import DictConfig
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from sleep_states_detect.metrics.compute_metric import score
@@ -10,35 +11,11 @@ from sleep_states_detect.models.unet1d import UNet1d
 
 
 class UNet1dLightning(pl.LightningModule):
-    def __init__(
-        self,
-        input_channels,
-        initial_channels,
-        initial_kernel_size,
-        down_channels,
-        down_kernel_size,
-        down_stride,
-        res_depth,
-        res_kernel_size,
-        se_ratio,
-        out_kernel_size,
-    ):
+    def __init__(self, cfg: DictConfig):
         super().__init__()
         self.save_hyperparameters()
-
-        # Define the model from the UNet1d class
-        self.model = UNet1d(
-            input_channels=input_channels,
-            initial_channels=initial_channels,
-            initial_kernel_size=initial_kernel_size,
-            down_channels=down_channels,
-            down_kernel_size=down_kernel_size,
-            down_stride=down_stride,
-            res_depth=res_depth,
-            res_kernel_size=res_kernel_size,
-            se_ratio=se_ratio,
-            out_kernel_size=out_kernel_size,
-        )
+        self.cfg = cfg
+        self.model = UNet1d(cfg)
 
     def forward(self, x):
         return self.model(x)
@@ -111,6 +88,6 @@ class UNet1dLightning(pl.LightningModule):
         return fig
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=1e-3)
-        scheduler = CosineAnnealingLR(optimizer, T_max=15)
+        optimizer = optim.Adam(self.parameters(), lr=self.cfg["optim_lr"])
+        scheduler = CosineAnnealingLR(optimizer, T_max=self.cfg["sheduler_T_max"])
         return [optimizer], [scheduler]

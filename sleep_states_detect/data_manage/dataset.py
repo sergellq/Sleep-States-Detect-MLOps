@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+from omegaconf import DictConfig
 from torch.utils.data import DataLoader, Dataset
 
 from sleep_states_detect.data_manage.data_preprocessing import data_preprocessing
@@ -32,30 +33,13 @@ class SleepDataset(Dataset):
 
 
 class SleepDataModule(pl.LightningDataModule):
-    def __init__(
-        self,
-        path_train_data="data/train_data.npy",
-        path_target_data="data/train_target.csv",
-        path_base_data="data/base_data.csv",
-        path_mask_data="data/train_mask.csv",
-        path_postprocessed_target="data/train_postprocessed_target.csv",
-        batch_size=8,
-        num_workers=8,
-        train_val_split=0.8,
-    ):
+    def __init__(self, cfg: DictConfig):
         super().__init__()
-        self.path_train_data = path_train_data
-        self.path_target_data = path_target_data
-        self.path_base_data = path_base_data
-        self.path_mask_data = path_mask_data
-        self.path_postprocessed_target = path_postprocessed_target
-        self.batch_size = batch_size
-        self.train_val_split = train_val_split
-        self.num_workers = num_workers
+        self.cfg = cfg
 
     def prepare_data(self):
         """Скачивание и предварительная обработка данных"""
-        data_preprocessing()
+        data_preprocessing(self.cfg)
 
     def setup(self, stage: str):
         """
@@ -65,11 +49,20 @@ class SleepDataModule(pl.LightningDataModule):
             stage: 'fit' or 'predict'
         """
         # Загрузка данных
-        train_data = torch.from_numpy(np.load(self.path_train_data)).float()
-        base_data = pd.read_csv(self.path_base_data, index_col=0)
-        df_y = pd.read_csv(self.path_target_data, index_col=[0, 1])
-        df_mask = pd.read_csv(self.path_mask_data, index_col=[0, 1])
-        df_events = pd.read_csv("data/train_events.csv")
+        folder = self.cfg["file_names"]["data_folder"]
+        train_data = torch.from_numpy(
+            np.load(folder + self.cfg["file_names"]["train_data"])
+        ).float()
+        base_data = pd.read_csv(
+            folder + self.cfg["file_names"]["base_data"], index_col=0
+        )
+        df_y = pd.read_csv(
+            folder + self.cfg["file_names"]["target_data"], index_col=[0, 1]
+        )
+        df_mask = pd.read_csv(
+            folder + self.cfg["file_names"]["mask_data"], index_col=[0, 1]
+        )
+        df_events = pd.read_csv(folder + self.cfg["file_names"]["kaggle_train_events"])
 
         if stage == "fit":
             # Получение уникальных серий
@@ -77,7 +70,9 @@ class SleepDataModule(pl.LightningDataModule):
             np.random.shuffle(unique_series_ids)
 
             # Деление на train / val series
-            split_idx = int(self.train_val_split * len(unique_series_ids))
+            split_idx = int(
+                self.cfg["dataset_params"]["train_val_split"] * len(unique_series_ids)
+            )
             train_ids = set(unique_series_ids[:split_idx])
             val_ids = set(unique_series_ids[split_idx:])
 
@@ -150,24 +145,28 @@ class SleepDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
+            batch_size=self.cfg["dataset_params"]["batch_size"],
+            num_workers=self.cfg["dataset_params"]["num_workers"],
             shuffle=True,
         )
 
     def val_dataloader(self):
         return DataLoader(
-            self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers
+            self.val_dataset,
+            batch_size=self.cfg["dataset_params"]["batch_size"],
+            num_workers=self.cfg["dataset_params"]["num_workers"],
         )
 
     def test_dataloader(self):
         return DataLoader(
-            self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers
+            self.val_dataset,
+            batch_size=self.cfg["dataset_params"]["batch_size"],
+            num_workers=self.cfg["dataset_params"]["num_workers"],
         )
 
     def predict_dataloader(self):
         return DataLoader(
             self.predict_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
+            batch_size=self.cfg["dataset_params"]["batch_size"],
+            num_workers=self.cfg["dataset_params"]["num_workers"],
         )

@@ -1,11 +1,11 @@
-import hydra
+# import hydra
 from omegaconf import DictConfig
 
 from sleep_states_detect.data_manage.download_data import download_data
 from sleep_states_detect.utils.utils import check_files_exist
 
 
-@hydra.main(config_path="../../configs", config_name="config", version_base=None)
+# @hydra.main(config_path="../../configs", config_name="config", version_base=None)
 def download_kaggle_data(cfg: DictConfig):
     if cfg["download_data"]["force_load"] or not check_files_exist(
         cfg["file_names"]["data_folder"],

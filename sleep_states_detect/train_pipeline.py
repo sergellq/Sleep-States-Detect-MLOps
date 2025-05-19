@@ -1,3 +1,5 @@
+import hydra
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -6,23 +8,15 @@ from sleep_states_detect.data_manage.dataset import SleepDataModule
 from sleep_states_detect.models.unet1d_lightning import UNet1dLightning
 
 
-def train_main():
+@hydra.main(config_path="../configs", config_name="config", version_base=None)
+def train_main(cfg: DictConfig):
+    OmegaConf.resolve(cfg)
+
     # Загрузка данных
-    data_module = SleepDataModule()
+    data_module = SleepDataModule(cfg)
 
     # Модель
-    model = UNet1dLightning(
-        input_channels=3,
-        initial_channels=72,
-        initial_kernel_size=15,
-        down_channels=(72, 72, 72),
-        down_kernel_size=(12, 15, 15),
-        down_stride=(12, 9, 5),  # first element must be 12
-        res_depth=3,
-        res_kernel_size=15,
-        se_ratio=4,
-        out_kernel_size=21,
-    )
+    model = UNet1dLightning(cfg["model"])
 
     # Логгер для TensorBoard
     logger = TensorBoardLogger("lightning_logs", name="sleep_state_detection")
