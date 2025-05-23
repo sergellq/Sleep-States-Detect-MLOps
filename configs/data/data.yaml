@@ -1,0 +1,15 @@
+base_link: https://drive.usercontent.google.com/download?id=151FZM1pJpObdTzfVgDzvUEF7IXL2g_Hw&export=download&confirm=t&uuid=826277d0-b14c-40aa-ae84-9506cba5cc66
+base_force_load: False
+preprocessed_link: https://drive.google.com/uc?export=download&id=1h27GIZ_PLBfkwoUfxYzlA1D-PRfxjaok
+preprocessed_force_load: False
+
+data_folder: data/
+
+kaggle_train_events: train_events.csv
+kaggle_train_series: train_series.parquet
+
+postprocessed_target: train_postprocessed_target.csv
+target_data: train_target.csv
+mask_data: train_mask.csv
+base_data: base_data.csv
+train_data: train_data.npy

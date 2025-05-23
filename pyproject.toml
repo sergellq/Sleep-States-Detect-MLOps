@@ -31,7 +31,6 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503"]  # Совместимость с Black

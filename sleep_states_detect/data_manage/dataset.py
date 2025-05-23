@@ -39,7 +39,7 @@ class SleepDataModule(pl.LightningDataModule):
 
     def prepare_data(self):
         """Скачивание и предварительная обработка данных"""
-        data_preprocessing(self.cfg)
+        data_preprocessing(self.cfg["data"])
 
     def setup(self, stage: str):
         """
@@ -49,20 +49,14 @@ class SleepDataModule(pl.LightningDataModule):
             stage: 'fit' or 'predict'
         """
         # Загрузка данных
-        folder = self.cfg["file_names"]["data_folder"]
+        folder = self.cfg["data"]["data_folder"]
         train_data = torch.from_numpy(
-            np.load(folder + self.cfg["file_names"]["train_data"])
+            np.load(folder + self.cfg["data"]["train_data"])
         ).float()
-        base_data = pd.read_csv(
-            folder + self.cfg["file_names"]["base_data"], index_col=0
-        )
-        df_y = pd.read_csv(
-            folder + self.cfg["file_names"]["target_data"], index_col=[0, 1]
-        )
-        df_mask = pd.read_csv(
-            folder + self.cfg["file_names"]["mask_data"], index_col=[0, 1]
-        )
-        df_events = pd.read_csv(folder + self.cfg["file_names"]["kaggle_train_events"])
+        base_data = pd.read_csv(folder + self.cfg["data"]["base_data"], index_col=0)
+        df_y = pd.read_csv(folder + self.cfg["data"]["target_data"], index_col=[0, 1])
+        df_mask = pd.read_csv(folder + self.cfg["data"]["mask_data"], index_col=[0, 1])
+        df_events = pd.read_csv(folder + self.cfg["data"]["kaggle_train_events"])
 
         if stage == "fit":
             # Получение уникальных серий
