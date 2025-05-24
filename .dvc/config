@@ -1,0 +1,4 @@
+[core]
+    remote = temp
+['remote "temp"']
+    url = /home/sergell/tmp/dvcstore

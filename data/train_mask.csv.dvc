@@ -1,0 +1,5 @@
+outs:
+- md5: 2f8c88b92c6b04019b8cf021f583c043
+  size: 44815839
+  hash: md5
+  path: train_mask.csv
