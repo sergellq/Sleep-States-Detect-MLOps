@@ -18,7 +18,9 @@ def infer_main(cfg: DictConfig):
     data_module.setup("predict")
 
     # Загрузка модели
-    model = UNet1dLightning.load_from_checkpoint(get_latest_checkpoint("checkpoints"))
+    model = UNet1dLightning.load_from_checkpoint(
+        get_latest_checkpoint(cfg["train_params"]["model_save_dir"])
+    )
 
     # Предсказание
     trainer = Trainer()
@@ -29,4 +31,4 @@ def infer_main(cfg: DictConfig):
     data = predict_peaks(data)
 
     # Сохранение результата
-    data.to_csv("data/result.csv")
+    data.to_csv(cfg["results"])

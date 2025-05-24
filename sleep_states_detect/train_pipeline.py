@@ -16,7 +16,7 @@ def train_main(cfg: DictConfig):
     data_module = SleepDataModule(cfg)
 
     # Модель
-    model = UNet1dLightning(cfg["model"])
+    model = UNet1dLightning(cfg["model_params"])
 
     # Логгер для TensorBoard
     logger = TensorBoardLogger("lightning_logs", name="sleep_state_detection")
@@ -25,8 +25,8 @@ def train_main(cfg: DictConfig):
 
     checkpoint_callback = ModelCheckpoint(
         monitor="valid_loss",  # метрика для отслеживания
-        dirpath="checkpoints/",  # куда сохранять модель
-        filename="best-checkpoint",  # имя файла
+        dirpath=cfg["train_params"]["model_save_dir"],  # куда сохранять модель
+        filename=cfg["train_params"]["model_save_name"],  # имя файла
         save_top_k=1,  # сохранить только лучший чекпоинт
         mode="min",  # 'min' для loss, 'max' для accuracy
         save_weights_only=True,  # сохраняем только веса, а не весь объект
@@ -35,7 +35,7 @@ def train_main(cfg: DictConfig):
 
     # Обучение
     trainer = Trainer(
-        max_epochs=2,
+        max_epochs=cfg["model_params"]["max_epochs"],
         callbacks=[checkpoint_callback, early_stop_callback],
         logger=logger,
         accelerator="auto",

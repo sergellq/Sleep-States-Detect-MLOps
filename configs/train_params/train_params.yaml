@@ -1,0 +1,2 @@
+model_save_dir: checkpoints/
+model_save_name: "best-checkpoint"

@@ -1,4 +1,7 @@
 defaults:
   - data: data
   - dataset_params: dataset_params
-  - model: model
+  - model_params: model_params
+  - train_params: train_params
+
+results: results.csv
