@@ -3,6 +3,9 @@ base_force_load: False
 preprocessed_link: https://drive.google.com/uc?export=download&id=1h27GIZ_PLBfkwoUfxYzlA1D-PRfxjaok
 preprocessed_force_load: False
 
+dvc_link: https://drive.usercontent.google.com/download?id=1N9LnvPm0UFvRCnkTrMFfDvC52KZKttQH
+dvc_folder: tmp
+
 data_folder: data/
 
 kaggle_train_events: train_events.csv

@@ -5,11 +5,13 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
 
 from sleep_states_detect.data_manage.dataset import SleepDataModule
+from sleep_states_detect.data_manage.dvc_load import dvc_load
 from sleep_states_detect.models.unet1d_lightning import UNet1dLightning
 
 
 @hydra.main(config_path="../configs", config_name="config", version_base=None)
 def train_main(cfg: DictConfig):
+    dvc_load(cfg["data"])
     OmegaConf.resolve(cfg)
 
     # Загрузка данных
