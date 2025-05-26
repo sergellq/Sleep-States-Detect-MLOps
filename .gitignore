@@ -9,7 +9,7 @@
 *.etc
 *.pkl
 *.ipynb
-checkpoints/
+checkpoints/*.ckpt
 lightning_logs/
 outputs/
 tmp/
