@@ -1,12 +1,10 @@
 import zipfile
-from io import BytesIO
 from pathlib import Path
 
-import requests
-from tqdm.auto import tqdm
+import gdown
 
 
-def download_data(link: str, data_dir: str | Path):
+def download_data(file_id: str, target_dir: str | Path):
     """
     link: ссылка на датасет
     force: проверять ли наличие файлов перед скачкой
@@ -17,29 +15,17 @@ def download_data(link: str, data_dir: str | Path):
     по идее надо бы с кагла напрямую качать, но там авторизация...
     """
 
-    print(link)
+    target_dir = Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-    data_dir = Path(data_dir)
-    data_dir.mkdir(parents=True, exist_ok=True)
+    output_path = target_dir / "downloaded.zip"
+    url = f"https://drive.google.com/uc?id={file_id}"
 
-    print(f"Скачивание {link} ...")
-    with requests.get(link, stream=True) as response:
-        response.raise_for_status()
-        total_size = int(response.headers.get("content-length", 0))
-        block_size = 1024
-        content = BytesIO()
-        with tqdm(
-            total=total_size, unit="B", unit_scale=True, desc="Скачивание"
-        ) as pbar:
-            for chunk in response.iter_content(chunk_size=block_size):
-                content.write(chunk)
-                pbar.update(len(chunk))
+    print(f"Скачивание файла с Google Drive: {url}")
+    gdown.download(url, str(output_path), quiet=False)
 
-    content.seek(0)
+    print(f"Распаковка архива {output_path} в {target_dir.resolve()} ...")
+    with zipfile.ZipFile(output_path, "r") as zip_ref:
+        zip_ref.extractall(target_dir)
 
-    print("Распаковка...")
-    with zipfile.ZipFile(content) as zip_file:
-        for file in tqdm(zip_file.namelist(), desc="Распаковка"):
-            zip_file.extract(member=file, path=data_dir)
-
-    print(f"Архив успешно загружен и распакован в {data_dir.resolve()}")
+    print("✅ Успешно скачано и распаковано!")
