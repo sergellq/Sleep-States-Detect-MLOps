@@ -40,3 +40,6 @@ extend-ignore = ["E203", "W503"]  # Совместимость с Black
 [tool.isort]
 profile = "black"
 line_length = 88                  # Совместимость с Black
+
+[tool.poetry]
+package-mode = false
