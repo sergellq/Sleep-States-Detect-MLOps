@@ -1,0 +1,9 @@
+base_link: 151FZM1pJpObdTzfVgDzvUEF7IXL2g_Hw
+base_force_load: False
+preprocessed_link: 1h27GIZ_PLBfkwoUfxYzlA1D-PRfxjaok
+preprocessed_force_load: False
+
+dvc_link: 1N9LnvPm0UFvRCnkTrMFfDvC52KZKttQH
+dvc_folder: tmp
+
+data_folder: data/

@@ -1,0 +1,10 @@
+kaggle_train_events: infer_events.csv
+kaggle_train_series: test_example.parquet
+
+postprocessed_target: infer_postprocessed_target.csv
+target_data: infer_target.csv
+mask_data: infer_mask.csv
+base_data: infer_base_data.csv
+train_data: infer_data.npy
+
+mode: infer

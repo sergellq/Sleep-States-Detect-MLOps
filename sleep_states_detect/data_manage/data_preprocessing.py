@@ -1,19 +1,13 @@
-import gc
-
-# import hydra
 import numpy as np
 import pandas as pd
 import polars as pl
 from omegaconf import DictConfig
 from tqdm.auto import tqdm
 
-from sleep_states_detect.data_manage.download_data import download_data
-from sleep_states_detect.data_manage.download_kaggle_data import download_kaggle_data
 from sleep_states_detect.utils.utils import check_files_exist
 
 
-# @hydra.main(config_path="../../configs", config_name="config", version_base=None)
-def data_preprocessing(cfg: DictConfig):
+def data_preprocessing(cfg_load: DictConfig, cfg_names: DictConfig):
     """Обработка начального датасета и сохранение в удобном виде
 
     Args:
@@ -23,48 +17,48 @@ def data_preprocessing(cfg: DictConfig):
     TODO: ест много оперативки (~20 gb), почему-то игнорит swap из-за чего крашится
           (лотерея 50/50)
     """
-
-    if not cfg["preprocessed_force_load"]:
-        if check_files_exist(
-            cfg["data_folder"],
-            [
-                cfg["postprocessed_target"],
-                cfg["target_data"],
-                cfg["mask_data"],
-                cfg["base_data"],
-                cfg["train_data"],
-            ],
-        ):
-            print("preprocessed data is already exists")
-            return
-        else:
-            if cfg["preprocessed_link"] is not None:
-                # download prepared data
-                download_data(
-                    link=cfg["preprocessed_link"],
-                    data_dir=cfg["data_folder"],
-                )
-                return
-
-    gc.collect()
-
-    if not check_files_exist(
-        cfg["data_folder"],
+    if check_files_exist(
+        cfg_load["data_folder"],
         [
-            cfg["kaggle_train_series"],
-            cfg["kaggle_train_events"],
+            cfg_names["mask_data"],
+            cfg_names["train_data"],
         ],
     ):
-        download_kaggle_data(cfg)
+        print("preprocessed data is already exists")
+        return
 
     df_series = pl.read_parquet(
-        cfg["data_folder"] + cfg["kaggle_train_series"],
+        cfg_load["data_folder"] + cfg_names["kaggle_train_series"],
         low_memory=True,
     )
-    df_events = pl.read_csv(cfg["data_folder"] + cfg["kaggle_train_events"])
-    df_events = df_events.with_columns(
-        pl.col("event").replace({"wakeup": 1.0, "onset": -1.0}).cast(pl.Float32)
-    )
+    if cfg_names["mode"] == "train":
+        df_events = pl.read_csv(
+            cfg_load["data_folder"] + cfg_names["kaggle_train_events"]
+        )
+        df_events = df_events.with_columns(
+            pl.col("event").replace({"wakeup": 1.0, "onset": -1.0}).cast(pl.Float32)
+        )
+    elif cfg_names["mode"] == "infer":
+        df_events = pd.DataFrame(
+            columns=["series_id", "night", "event", "step", "timestamp"]
+        )
+        for series_id, _ in df_series.group_by("series_id", maintain_order=True):
+            df_events.loc[len(df_events)] = [
+                series_id[0],
+                1,  # night
+                "onset",  # event
+                None,  # step
+                None,  # timestamp
+            ]
+            df_events.loc[len(df_events)] = [
+                series_id[0],
+                1,  # night
+                "wakeup",  # event
+                None,  # step
+                None,  # timestamp
+            ]
+        df_events.to_csv(cfg_load["data_folder"] + cfg_names["kaggle_train_events"])
+        df_events = pl.from_pandas(df_events)
 
     n_unique = df_series.get_column("series_id").n_unique()
 
@@ -92,6 +86,7 @@ def data_preprocessing(cfg: DictConfig):
                 pl.col("timestamp").dt.time().cast(str).alias("time"),
             )
         ).to_pandas()
+        df["event"] = df["event"].astype(float)
 
         df["timestamp"] = df["timestamp"].dt.tz_localize(None)
         dup_count = df.groupby(["anglez", "enmo", "time"])["step"].transform("count")
@@ -152,7 +147,9 @@ def data_preprocessing(cfg: DictConfig):
     df_1min = pd.concat(list_df_1min)
 
     # df_events
-    df_events = pd.read_csv(cfg["data_folder"] + cfg["kaggle_train_events"]).dropna()
+    df_events = pd.read_csv(
+        cfg_load["data_folder"] + cfg_names["kaggle_train_events"]
+    ).dropna()
     df_events["timestamp"] = pd.to_datetime(
         df_events["timestamp"], utc=True
     ).dt.tz_localize(None)
@@ -167,9 +164,9 @@ def data_preprocessing(cfg: DictConfig):
         index=["series_id", "date"], columns="time", values="valid_flag"
     ).fillna(0)
 
-    df_events.to_csv(cfg["data_folder"] + cfg["postprocessed_target"])
-    df_y.to_csv(cfg["data_folder"] + cfg["target_data"])
-    df_mask.to_csv(cfg["data_folder"] + cfg["mask_data"])
-    df_1min.to_csv(cfg["data_folder"] + cfg["base_data"])
+    df_events.to_csv(cfg_load["data_folder"] + cfg_names["postprocessed_target"])
+    df_y.to_csv(cfg_load["data_folder"] + cfg_names["target_data"])
+    df_mask.to_csv(cfg_load["data_folder"] + cfg_names["mask_data"])
+    df_1min.to_csv(cfg_load["data_folder"] + cfg_names["base_data"])
 
-    np.save(cfg["data_folder"] + cfg["train_data"], X)
+    np.save(cfg_load["data_folder"] + cfg_names["train_data"], X)

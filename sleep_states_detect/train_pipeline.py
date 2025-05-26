@@ -11,11 +11,13 @@ from sleep_states_detect.models.unet1d_lightning import UNet1dLightning
 
 @hydra.main(config_path="../configs", config_name="config", version_base=None)
 def train_main(cfg: DictConfig):
-    dvc_load(cfg["data"])
+    dvc_load(cfg["data_load"])
     OmegaConf.resolve(cfg)
 
     # Загрузка данных
-    data_module = SleepDataModule(cfg)
+    data_module = SleepDataModule(
+        cfg["data_load"], cfg["data_train"], cfg["dataset_params"]
+    )
 
     # Модель
     model = UNet1dLightning(cfg["model_params"])

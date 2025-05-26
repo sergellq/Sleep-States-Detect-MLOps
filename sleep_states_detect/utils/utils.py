@@ -18,7 +18,7 @@ def check_files_exist(data_dir: Path | str, file_list: list[Path | str]) -> bool
     # Проверяем, существует ли папка
     data_dir = Path(data_dir)
     if not data_dir.exists():
-        print(f"Папка {data_dir} не существует.")
+        # print(f"Папка {data_dir} не существует.")
         return False
 
     # Проверяем, существуют ли все файлы

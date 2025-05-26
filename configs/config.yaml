@@ -1,5 +1,8 @@
 defaults:
-  - data: data
+  - _self_
+  - data_infer: data_infer
+  - data_train: data_train
+  - data_load: data_load
   - dataset_params: dataset_params
   - model_params: model_params
   - train_params: train_params
