@@ -90,6 +90,7 @@ python train.py
 ```
 
 там в configs/model_params/model_params.yaml стоит 2 эпохи чтобы быстро считало
+
 при первом запуске скачает dvc хранилище с гугл диска в path/to/project/tmp/
 
 ## infer
