@@ -70,7 +70,7 @@ https://www.kaggle.com/competitions/child-mind-institute-detect-sleep-states/dis
 ## установка
 
 ```
-git clone
+git clone git@github.com:sergellq/Sleep-States-Detect-MLOps.git
 cd Sleep-States-Detect-MLOps
 conda create --name=venv
 conda activate venv
